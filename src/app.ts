@@ -94,4 +94,32 @@ app.get("/api/auth/me", authenticateToken, (req: AuthRequest, res) => {
         user: req.user
     });
 });
+
+app.get("/api/users/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+        if (req.user?.id !== req.params.id) {
+            return res.status(403).json({
+                message: "You can only access your own profile"
+            });
+        }
+
+        const user = await getUserById(req.params.id);
+
+        res.json({
+            user
+        });
+    } catch (error) {
+        if (error instanceof Error && error.message === "User not found") {
+            return res.status(404).json({
+                message: error.message
+            });
+        }
+
+        console.error(error);
+
+        res.status(500).json({
+            message: "Server error"
+        });
+    }
+});
 export default app;
