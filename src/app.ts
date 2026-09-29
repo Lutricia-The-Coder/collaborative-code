@@ -3,6 +3,7 @@ import { registerUser, loginUser } from "./auth";
 import { authenticateToken, AuthRequest } from "./middleware";
 import { getUserById, updateUser, deleteUser } from "./users";
 import {createProject, getProjects, addProjectMember, removeProjectMember} from "./projects";
+import { createSubmission } from "./submissions";
 const app = express();
 
 app.use(express.json());
@@ -182,6 +183,35 @@ app.delete(
             if (error instanceof Error &&error.message === "Project member not found") {
                 return res.status(404).json({message: error.message});
             }
+            console.error(error);
+            res.status(500).json({message: "Server error"});
+        }
+    }
+);
+//create submissions
+app.post(
+    "/api/projects/:projectId/submissions",
+    authenticateToken,
+    async (req: AuthRequest, res) => {
+        try {
+            const projectId = req.params.projectId as string;
+            const {title,filename,code,language} = req.body;
+
+            if (!title || !code) {
+     return res.status(400).json({message: "Title and code are required"});
+            }
+
+            const submission = await createSubmission(
+                projectId,
+                req.user!.id,
+                title,
+                filename || null,
+                code,
+                language || null
+            );
+
+            res.status(201).json({message: "Submission created successfully",submission });
+        } catch (error) {
             console.error(error);
             res.status(500).json({message: "Server error"});
         }
