@@ -16,12 +16,7 @@ export async function getUserById(id: string) {
     return result.rows[0];
 }
 
-export async function updateUser(
-    id: string,
-    name: string,
-    email: string,
-    password?: string,
-    profilePicture?: string
+export async function updateUser( id: string, name: string,email: string,password?: string,profilePicture?: string
 ) {
     let query: string;
     let values: any[];

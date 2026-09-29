@@ -68,7 +68,6 @@ app.get("/api/users/:id", authenticateToken, async (req: AuthRequest, res) => {
         }
 
         const user = await getUserById(req.params.id);
-
         res.json({user});
     } catch (error) {
         if (error instanceof Error && error.message === "User not found") {
@@ -87,7 +86,6 @@ app.put("/api/users/:id", authenticateToken, async (req: AuthRequest, res) => {
         }
 
         const {name,email,password,profile_picture} = req.body;
-
         if (!name || !email) {
             return res.status(400).json({message: "Name and email are required" });
         }
@@ -100,9 +98,25 @@ app.put("/api/users/:id", authenticateToken, async (req: AuthRequest, res) => {
         }
 
         console.error(error);
-
         res.status(500).json({message: "Server error"});
     }
 });
+//delete user
+app.delete("/api/users/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+        if (req.user?.id !== req.params.id) {
+return res.status(403).json({message: "You can only delete your own account"});
+        }
 
+        await deleteUser(req.params.id);
+        res.json({message: "User deleted successfully" });
+    } catch (error) {
+        if (error instanceof Error && error.message === "User not found") {
+   return res.status(404).json({message: error.message});
+        }
+
+        console.error(error);
+        res.status(500).json({ message: "Server error"});
+    }
+});
 export default app;
