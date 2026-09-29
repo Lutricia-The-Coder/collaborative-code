@@ -1,6 +1,7 @@
 import express from "express";
 import { registerUser, loginUser } from "./auth";
 import { authenticateToken, AuthRequest } from "./middleware";
+import { getUserById, updateUser, deleteUser } from "./users";
 
 const app = express();
 
