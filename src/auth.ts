@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import pool from "./db";
 
@@ -28,4 +29,59 @@ export async function registerUser(
     );
 
     return result.rows[0];
+}
+
+export async function loginUser(
+    email: string,
+    password: string
+) {
+    const result = await pool.query(
+        `SELECT id, name, email, password_hash, role, profile_picture
+         FROM users
+         WHERE email = $1`,
+        [email]
+    );
+
+    if (result.rows.length === 0) {
+        throw new Error("Invalid email or password");
+    }
+
+    const user = result.rows[0];
+
+    const passwordMatch = await bcrypt.compare(
+        password,
+        user.password_hash
+    );
+
+    if (!passwordMatch) {
+        throw new Error("Invalid email or password");
+    }
+
+    const secret = process.env.JWT_SECRET;
+
+    if (!secret) {
+        throw new Error("JWT secret is not configured");
+    }
+
+    const token = jwt.sign(
+        {
+            id: user.id,
+            role: user.role
+        },
+        secret,
+        {
+            expiresIn: "1h"
+        }
+    );
+
+    return {
+        token,
+        user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            profile_picture: user.profile_picture
+        }
+    };
 }

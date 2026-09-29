@@ -1,5 +1,6 @@
 import express from "express";
-import { registerUser } from "./auth";
+import { registerUser, loginUser } from "./auth";
+import { authenticateToken, AuthRequest } from "./middleware";
 
 const app = express();
 
@@ -52,5 +53,44 @@ app.post("/api/auth/register", async (req, res) => {
         });
     }
 });
+app.post("/api/auth/login", async (req, res) => {
+    try {
+        const { email, password } = req.body;
 
+        if (!email || !password) {
+            return res.status(400).json({
+                message: "Email and password are required"
+            });
+        }
+
+        const result = await loginUser(email, password);
+
+        res.status(200).json({
+            message: "Login successful",
+            ...result
+        });
+    } catch (error) {
+        if (
+            error instanceof Error &&
+            error.message === "Invalid email or password"
+        ) {
+            return res.status(401).json({
+                message: error.message
+            });
+        }
+
+        console.error(error);
+
+        res.status(500).json({
+            message: "Server error"
+        });
+    }
+});
+
+app.get("/api/auth/me", authenticateToken, (req: AuthRequest, res) => {
+    res.json({
+        message: "Authentication successful",
+        user: req.user
+    });
+});
 export default app;
