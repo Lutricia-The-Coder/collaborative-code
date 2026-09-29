@@ -2,7 +2,7 @@ import express from "express";
 import { registerUser, loginUser } from "./auth";
 import { authenticateToken, AuthRequest } from "./middleware";
 import { getUserById, updateUser, deleteUser } from "./users";
-
+import {createProject, getProjects, addProjectMember, removeProjectMember} from "./projects";
 const app = express();
 
 app.use(express.json());
@@ -119,4 +119,72 @@ return res.status(403).json({message: "You can only delete your own account"});
         res.status(500).json({ message: "Server error"});
     }
 });
+//create and list projects
+app.post("/api/projects", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+        const { name, description } = req.body;
+
+        if (!name) {
+     return res.status(400).json({ message: "Project name is required"});
+        }
+
+        const project = await createProject(name,description || null,req.user!.id);
+
+        res.status(201).json({message: "Project created successfully", project});
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({message: "Server error"});
+    }
+});
+
+app.get("/api/projects", authenticateToken, async (req, res) => {
+    try {
+        const projects = await getProjects();
+        res.json({projects});
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({message: "Server error"});
+    }
+});
+//add project member
+app.post(
+    "/api/projects/:id/members",
+    authenticateToken,
+    async (req: AuthRequest, res) => {
+        try {
+            const { userId } = req.body;
+
+            if (!userId) {
+                return res.status(400).json({ message: "userId is required"});
+            }
+
+           const projectId = req.params.id as string;
+const member = await addProjectMember(projectId,userId);
+            res.status(201).json({message: "Member added successfully",member});
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: "Server error"});
+        }
+    }
+);
+//deleteproject member
+app.delete(
+    "/api/projects/:id/members/:userId",
+    authenticateToken,
+    async (req: AuthRequest, res) => {
+        try {
+            const projectId = req.params.id as string;
+            const userId = req.params.userId as string;
+            const member = await removeProjectMember(projectId,userId);
+
+            res.json({message: "Member removed successfully",member});
+        } catch (error) {
+            if (error instanceof Error &&error.message === "Project member not found") {
+                return res.status(404).json({message: error.message});
+            }
+            console.error(error);
+            res.status(500).json({message: "Server error"});
+        }
+    }
+);
 export default app;
