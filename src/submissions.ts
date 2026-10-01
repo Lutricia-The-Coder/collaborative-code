@@ -29,3 +29,15 @@ export async function createSubmission(
 
     return result.rows[0];
 }
+//listing submissions for a project
+export async function getSubmissionsByProject(projectId: string) {
+    const result = await pool.query(
+        `SELECT id, project_id, submitter_id, title, filename, code, language, status
+         FROM submissions
+         WHERE project_id = $1
+         ORDER BY title`,
+        [projectId]
+    );
+
+    return result.rows;
+}
