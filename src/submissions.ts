@@ -41,3 +41,17 @@ export async function getSubmissionsByProject(projectId: string) {
 
     return result.rows;
 }
+//view one submission
+export async function getSubmissionById(id: string) {
+    const result = await pool.query(
+        `SELECT id, project_id, submitter_id, title, filename, code, language, status
+         FROM submissions
+         WHERE id = $1`,
+        [id]
+    );
+
+    if (result.rows.length === 0) {
+        throw new Error("Submission not found");
+    }
+    return result.rows[0];
+}
