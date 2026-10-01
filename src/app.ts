@@ -309,6 +309,9 @@ app.post(
     authenticateToken,
     async (req: AuthRequest, res) => {
         try {
+            if (req.user?.role !== "reviewer") {
+    return res.status(403).json({ message: "Only reviewers can comment"});
+}
             const submissionId = req.params.submissionId as string;
             const { content, line_number } = req.body;
 
