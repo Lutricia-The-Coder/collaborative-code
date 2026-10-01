@@ -73,3 +73,17 @@ export async function updateSubmissionStatus(
     }
     return result.rows[0];
 }
+//delete submission
+export async function deleteSubmission(id: string) {
+    const result = await pool.query(
+        `DELETE FROM submissions
+         WHERE id = $1
+         RETURNING id`,
+        [id]
+    );
+
+    if (result.rows.length === 0) {
+        throw new Error("Submission not found");
+    }
+    return result.rows[0];
+}
