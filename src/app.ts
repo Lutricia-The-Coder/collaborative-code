@@ -5,6 +5,8 @@ import { getUserById, updateUser, deleteUser } from "./users";
 import {createProject, getProjects, addProjectMember, removeProjectMember} from "./projects";
 import { createSubmission,getSubmissionsByProject, getSubmissionById,updateSubmissionStatus, deleteSubmission} from "./submissions";
 import { createComment, getCommentsBySubmission ,updateComment, deleteComment} from "./comments";
+import {reviewSubmission, getReviewHistory} from "./reviews";
+
 const app = express();
 
 app.use(express.json());
@@ -388,6 +390,53 @@ app.delete(
             if (error instanceof Error &&error.message === "Comment not found") {
                 return res.status(404).json({message: error.message});
             }
+            console.error(error);
+            res.status(500).json({message: "Server error"});
+        }
+    }
+);//approve or requuest changes 
+app.put(
+    "/api/submissions/:id/review",
+    authenticateToken,
+    async (req: AuthRequest, res) => {
+        try {
+            if (req.user?.role !== "reviewer") {
+                return res.status(403).json({message: "Only reviewers can review submissions"});
+            }
+
+            const submissionId = req.params.id as string;
+            const { status } = req.body;
+
+            if (status !== "approved" && status !== "changes_requested") {
+                return res.status(400).json({ message:"Status must be approved or changes_requested"});
+            }
+
+            const review = await reviewSubmission(
+                submissionId,
+                req.user.id,
+                status
+            );
+
+            res.json({message: "Submission reviewed successfully",review});
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({message: "Server error"});
+        }
+    }
+);//review history
+app.get(
+    "/api/submissions/:id/reviews",
+    authenticateToken,
+    async (req: AuthRequest, res) => {
+        try {
+            const submissionId = req.params.id as string;
+
+            const reviews = await getReviewHistory(
+                submissionId
+            );
+
+            res.json({reviews});
+        } catch (error) {
             console.error(error);
             res.status(500).json({message: "Server error"});
         }
