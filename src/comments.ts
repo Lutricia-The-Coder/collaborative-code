@@ -24,3 +24,16 @@ export async function createComment(
     );
     return result.rows[0];
 }
+//get commnets for a submission
+export async function getCommentsBySubmission(
+    submissionId: string
+) {
+    const result = await pool.query(
+        `SELECT id, submission_id, user_id, content, line_number
+         FROM comments
+         WHERE submission_id = $1
+         ORDER BY line_number NULLS FIRST`,
+        [submissionId]
+    );
+    return result.rows;
+}
