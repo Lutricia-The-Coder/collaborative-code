@@ -55,3 +55,21 @@ export async function getSubmissionById(id: string) {
     }
     return result.rows[0];
 }
+//update submission status
+export async function updateSubmissionStatus(
+    id: string,
+    status: string
+) {
+    const result = await pool.query(
+        `UPDATE submissions
+         SET status = $1
+         WHERE id = $2
+         RETURNING id, project_id, submitter_id, title, filename, code, language, status`,
+        [status, id]
+    );
+
+    if (result.rows.length === 0) {
+        throw new Error("Submission not found");
+    }
+    return result.rows[0];
+}
