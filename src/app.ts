@@ -4,7 +4,7 @@ import { authenticateToken, AuthRequest } from "./middleware";
 import { getUserById, updateUser, deleteUser } from "./users";
 import {createProject, getProjects, addProjectMember, removeProjectMember} from "./projects";
 import { createSubmission,getSubmissionsByProject, getSubmissionById,updateSubmissionStatus, deleteSubmission} from "./submissions";
-import { createComment, getCommentsBySubmission } from "./comments";
+import { createComment, getCommentsBySubmission ,updateComment, deleteComment} from "./comments";
 const app = express();
 
 app.use(express.json());
@@ -338,6 +338,53 @@ app.get(
             const comments = await getCommentsBySubmission(submissionId);
             res.json({comments});
         } catch (error) {
+            console.error(error);
+            res.status(500).json({message: "Server error"});
+        }
+    }
+);//update comments
+app.put(
+    "/api/comments/:id",
+    authenticateToken,
+    async (req: AuthRequest, res) => {
+        try {
+            const id = req.params.id as string;
+            const { content, line_number } = req.body;
+
+            if (!content) {
+                return res.status(400).json({message: "Comment content is required"});
+            }
+
+            const comment = await updateComment(
+                id,
+                req.user!.id,
+                content,
+                line_number ?? null
+            );
+            res.json({message: "Comment updated successfully",comment});
+        } catch (error) {
+            if (error instanceof Error &&error.message === "Comment not found") {
+                return res.status(404).json({message: error.message });
+            }
+
+            console.error(error);
+            res.status(500).json({message: "Server error"});
+        }
+    }
+);
+//delete comments
+app.delete(
+    "/api/comments/:id",
+    authenticateToken,
+    async (req: AuthRequest, res) => {
+        try {
+            const id = req.params.id as string;
+            const comment = await deleteComment(id,req.user!.id );
+            res.json({ message: "Comment deleted successfully",comment});
+        } catch (error) {
+            if (error instanceof Error &&error.message === "Comment not found") {
+                return res.status(404).json({message: error.message});
+            }
             console.error(error);
             res.status(500).json({message: "Server error"});
         }
