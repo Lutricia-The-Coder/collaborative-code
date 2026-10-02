@@ -10,8 +10,8 @@ exports.deleteComment = deleteComment;
 const db_1 = __importDefault(require("./db"));
 async function createComment(submissionId, userId, content, lineNumber) {
     const result = await db_1.default.query(`INSERT INTO comments
-         (id, submission_id, user_id, content, line_number)
-         VALUES ($1, $2, $3, $4, $5)
+         (submission_id, user_id, content, line_number)
+         VALUES ($1, $2, $3, $4)
          RETURNING id, submission_id, user_id, content, line_number`, [
         submissionId,
         userId,

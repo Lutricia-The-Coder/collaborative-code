@@ -65,11 +65,11 @@ app.get("/api/auth/me", authenticateToken, (req: AuthRequest, res) => {
 
 app.get("/api/users/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
-        if (req.user?.id !== req.params.id) {
+       if (req.user?.id !== Number(req.params.id)) {
             return res.status(403).json({ message: "You can only access your own profile"});
         }
 
-        const user = await getUserById(req.params.id);
+        const user = await getUserById(Number(req.params.id));
         res.json({user});
     } catch (error) {
         if (error instanceof Error && error.message === "User not found") {
@@ -83,8 +83,8 @@ app.get("/api/users/:id", authenticateToken, async (req: AuthRequest, res) => {
 //update user profile
 app.put("/api/users/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
-        if (req.user?.id !== req.params.id) {
-        return res.status(403).json({ message: "You can only update your own profile"});
+       if (req.user?.id !== Number(req.params.id)) {
+            return res.status(403).json({ message: "You can only update your own profile"});
         }
 
         const {name,email,password,profile_picture} = req.body;
@@ -92,7 +92,7 @@ app.put("/api/users/:id", authenticateToken, async (req: AuthRequest, res) => {
             return res.status(400).json({message: "Name and email are required" });
         }
 
-        const user = await updateUser(req.params.id, name,email,password,profile_picture);
+        const user = await updateUser(Number(req.params.id), name,email,password,profile_picture);
         res.json({ message: "User updated successfully",user});
     } catch (error) {
         if (error instanceof Error && error.message === "User not found") {
@@ -106,11 +106,11 @@ app.put("/api/users/:id", authenticateToken, async (req: AuthRequest, res) => {
 //delete user
 app.delete("/api/users/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
-        if (req.user?.id !== req.params.id) {
+        if (req.user?.id !== Number(req.params.id)) {
 return res.status(403).json({message: "You can only delete your own account"});
         }
 
-        await deleteUser(req.params.id);
+        await deleteUser(Number(req.params.id));
         res.json({message: "User deleted successfully" });
     } catch (error) {
         if (error instanceof Error && error.message === "User not found") {
@@ -195,7 +195,7 @@ app.post(
     authenticateToken,requireFields(["title", "code"]),
     async (req: AuthRequest, res) => {
         try {
-            const projectId = req.params.projectId as string;
+            const projectId = Number(req.params.projectId);
             const {title,filename,code,language} = req.body;
 
             if (!title || !code) {

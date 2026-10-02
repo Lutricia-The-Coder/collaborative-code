@@ -3,7 +3,7 @@ import pool from "./db";
 
 export async function createComment(
     submissionId: string,
-    userId: string,
+    userId: number,
     content: string,
     lineNumber: number | null
 ) {
@@ -38,7 +38,7 @@ export async function getCommentsBySubmission(
 }//updating commnets 
 export async function updateComment(
     id: string,
-    userId: string,
+    userId: number,
     content: string,
     lineNumber: number | null
 ) {
@@ -64,7 +64,7 @@ export async function updateComment(
 //delete comment
 export async function deleteComment(
     id: string,
-    userId: string
+    userId: number
 ) {
     const result = await pool.query(
         `DELETE FROM comments

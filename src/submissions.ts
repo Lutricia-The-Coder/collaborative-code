@@ -1,8 +1,8 @@
 import pool from "./db";
 
 export async function createSubmission(
-    projectId: string,
-    submitterId: string,
+    projectId: number,
+    submitterId: number,
     title: string,
     filename: string | null,
     code: string,

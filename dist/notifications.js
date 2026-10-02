@@ -8,12 +8,9 @@ exports.getActivityFeed = getActivityFeed;
 const db_1 = __importDefault(require("./db"));
 async function createActivity(userId, message) {
     const result = await db_1.default.query(`INSERT INTO activity_feed
-         (id, user_id, message)
-         VALUES ($1, $2, $3)
-         RETURNING id, user_id, message, created_at`, [
-        userId,
-        message
-    ]);
+         (user_id, message)
+         VALUES ($1, $2)
+         RETURNING id, user_id, message, created_at`, [userId, message]);
     return result.rows[0];
 }
 async function getActivityFeed(userId) {

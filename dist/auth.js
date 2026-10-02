@@ -15,7 +15,7 @@ async function registerUser(name, email, password, role = "submitter") {
     }
     const passwordHash = await bcryptjs_1.default.hash(password, 10);
     const result = await db_1.default.query(`INSERT INTO users (name, email, password_hash, role)
-     VALUES ($1, $2, $3, $4, $5)
+     VALUES ($1, $2, $3, $4)
     RETURNING id, name, email, role, profile_picture`, [name, email, passwordHash, role]);
     return result.rows[0];
 }

@@ -11,8 +11,8 @@ exports.deleteSubmission = deleteSubmission;
 const db_1 = __importDefault(require("./db"));
 async function createSubmission(projectId, submitterId, title, filename, code, language) {
     const result = await db_1.default.query(`INSERT INTO submissions
-         (id, project_id, submitter_id, title, filename, code, language)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ( project_id, submitter_id, title, filename, code, language)
+         VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING id, project_id, submitter_id, title, filename, code, language, status`, [
         projectId,
         submitterId,

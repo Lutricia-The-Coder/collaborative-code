@@ -3,7 +3,7 @@ import pool from "./db";
 
 export async function reviewSubmission(
     submissionId: string,
-    reviewerId: string,
+    reviewerId: number,
     status: string
 ) {
     const submission = await pool.query(

@@ -17,8 +17,8 @@ async function reviewSubmission(submissionId, reviewerId, status) {
          SET status = $1
          WHERE id = $2`, [status, submissionId]);
     const result = await db_1.default.query(`INSERT INTO review_history
-         (id, submission_id, reviewer_id, status)
-         VALUES ($1, $2, $3, $4)
+         ( submission_id, reviewer_id, status)
+         VALUES ($1, $2, $3)
          RETURNING id, submission_id, reviewer_id, status, created_at`, [
         submissionId,
         reviewerId,

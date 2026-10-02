@@ -9,8 +9,8 @@ exports.addProjectMember = addProjectMember;
 exports.removeProjectMember = removeProjectMember;
 const db_1 = __importDefault(require("./db"));
 async function createProject(name, description, ownerId) {
-    const result = await db_1.default.query(`INSERT INTO projects (id, name, description, owner_id)
-         VALUES ($1, $2, $3, $4)
+    const result = await db_1.default.query(`INSERT INTO projects ( name, description, owner_id)
+         VALUES ($1, $2, $3)
          RETURNING id, name, description, owner_id`, [name, description, ownerId]);
     return result.rows[0];
 }

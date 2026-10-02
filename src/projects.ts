@@ -4,7 +4,7 @@ import pool from "./db";
 export async function createProject(
     name: string,
     description: string,
-    ownerId: string
+    ownerId: number
 ) {
 
 

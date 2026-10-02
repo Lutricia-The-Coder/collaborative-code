@@ -58,10 +58,10 @@ app.get("/api/auth/me", middleware_1.authenticateToken, (req, res) => {
 });
 app.get("/api/users/:id", middleware_1.authenticateToken, async (req, res) => {
     try {
-        if (req.user?.id !== req.params.id) {
+        if (req.user?.id !== Number(req.params.id)) {
             return res.status(403).json({ message: "You can only access your own profile" });
         }
-        const user = await (0, users_1.getUserById)(req.params.id);
+        const user = await (0, users_1.getUserById)(Number(req.params.id));
         res.json({ user });
     }
     catch (error) {
@@ -75,14 +75,14 @@ app.get("/api/users/:id", middleware_1.authenticateToken, async (req, res) => {
 //update user profile
 app.put("/api/users/:id", middleware_1.authenticateToken, async (req, res) => {
     try {
-        if (req.user?.id !== req.params.id) {
+        if (req.user?.id !== Number(req.params.id)) {
             return res.status(403).json({ message: "You can only update your own profile" });
         }
         const { name, email, password, profile_picture } = req.body;
         if (!name || !email) {
             return res.status(400).json({ message: "Name and email are required" });
         }
-        const user = await (0, users_1.updateUser)(req.params.id, name, email, password, profile_picture);
+        const user = await (0, users_1.updateUser)(Number(req.params.id), name, email, password, profile_picture);
         res.json({ message: "User updated successfully", user });
     }
     catch (error) {
@@ -96,10 +96,10 @@ app.put("/api/users/:id", middleware_1.authenticateToken, async (req, res) => {
 //delete user
 app.delete("/api/users/:id", middleware_1.authenticateToken, async (req, res) => {
     try {
-        if (req.user?.id !== req.params.id) {
+        if (req.user?.id !== Number(req.params.id)) {
             return res.status(403).json({ message: "You can only delete your own account" });
         }
-        await (0, users_1.deleteUser)(req.params.id);
+        await (0, users_1.deleteUser)(Number(req.params.id));
         res.json({ message: "User deleted successfully" });
     }
     catch (error) {
@@ -170,7 +170,7 @@ app.delete("/api/projects/:id/members/:userId", middleware_1.authenticateToken, 
 //create submissions
 app.post("/api/projects/:projectId/submissions", middleware_1.authenticateToken, (0, validation_1.requireFields)(["title", "code"]), async (req, res) => {
     try {
-        const projectId = req.params.projectId;
+        const projectId = Number(req.params.projectId);
         const { title, filename, code, language } = req.body;
         if (!title || !code) {
             return res.status(400).json({ message: "Title and code are required" });
@@ -350,37 +350,32 @@ app.get("/api/submissions/:id/reviews", middleware_1.authenticateToken, async (r
     }
 });
 //notifications
-app.post("/api/activities", middleware_1.authenticateToken, async (req, res) => {
+app.post("/api/notifications", middleware_1.authenticateToken, async (req, res) => {
     try {
         const { message } = req.body;
         if (!message) {
-            return res.status(400).json({
-                message: "Activity message is required"
-            });
+            return res.status(400).json({ message: "Activity message is required" });
         }
-        const activity = await (0, notifications_1.createActivity)(req.user.id, message);
-        res.status(201).json({
-            message: "Activity created successfully",
-            activity
-        });
-    }
-    catch (error) {
-        console.error(error);
-        res.status(500).json({
-            message: "Server error"
-        });
-    }
-});
-app.get("/api/activities", middleware_1.authenticateToken, async (req, res) => {
-    try {
-        const activities = await (0, notifications_1.getActivityFeed)(req.user.id);
-        res.json({ activities });
+        const notification = await (0, notifications_1.createActivity)(req.user.id, message);
+        res.status(201).json({ message: "Notification created successfully", notification });
     }
     catch (error) {
         console.error(error);
         res.status(500).json({ message: "Server error" });
     }
 });
+app.get("/api/users/:id/notifications", middleware_1.authenticateToken, async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const notifications = await (0, notifications_1.getActivityFeed)(userId);
+        res.json({ notifications });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+//statistics
 app.get("/api/projects/:projectId/stats", middleware_1.authenticateToken, async (req, res) => {
     try {
         const projectId = req.params.projectId;

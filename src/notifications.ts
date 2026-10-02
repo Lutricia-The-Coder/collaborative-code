@@ -1,7 +1,7 @@
 import pool from "./db";
 
 export async function createActivity(
-    userId: string,
+    userId: number,
     message: string
 ) {
     const result = await pool.query(

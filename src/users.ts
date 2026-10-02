@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import pool from "./db";
 
-export async function getUserById(id: string) {
+export async function getUserById(id: number) {
     const result = await pool.query(
         `SELECT id, name, email, role, profile_picture
          FROM users
@@ -16,7 +16,7 @@ export async function getUserById(id: string) {
     return result.rows[0];
 }
 
-export async function updateUser( id: string, name: string,email: string,password?: string,profilePicture?: string
+export async function updateUser( id: number, name: string,email: string,password?: string,profilePicture?: string
 ) {
     let query: string;
     let values: any[];
@@ -57,7 +57,7 @@ export async function updateUser( id: string, name: string,email: string,passwor
     return result.rows[0];
 }
 
-export async function deleteUser(id: string) {
+export async function deleteUser(id: number) {
     const result = await pool.query(
         "DELETE FROM users WHERE id = $1 RETURNING id",
         [id]
