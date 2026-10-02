@@ -9,6 +9,11 @@ const middleware_1 = require("./middleware");
 const users_1 = require("./users");
 const projects_1 = require("./projects");
 const submissions_1 = require("./submissions");
+const comments_1 = require("./comments");
+const reviews_1 = require("./reviews");
+const notifications_1 = require("./notifications");
+const stats_1 = require("./stats");
+const webserver_1 = require("./webserver");
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.get("/", (req, res) => {
@@ -177,6 +182,215 @@ app.post("/api/projects/:projectId/submissions", middleware_1.authenticateToken,
         }
         const submission = await (0, submissions_1.createSubmission)(projectId, req.user.id, title, filename || null, code, language || null);
         res.status(201).json({ message: "Submission created successfully", submission });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+//list submisssions
+app.get("/api/projects/:projectId/submissions", middleware_1.authenticateToken, async (req, res) => {
+    try {
+        const projectId = req.params.projectId;
+        const submissions = await (0, submissions_1.getSubmissionsByProject)(projectId);
+        res.json({ submissions });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+//get 1 submission
+app.get("/api/submissions/:id", middleware_1.authenticateToken, async (req, res) => {
+    try {
+        const id = req.params.id;
+        const submission = await (0, submissions_1.getSubmissionById)(id);
+        res.json({ submission });
+    }
+    catch (error) {
+        if (error instanceof Error && error.message === "Submission not found") {
+            return res.status(404).json({ message: error.message });
+        }
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+//pdating status
+app.put("/api/submissions/:id/status", middleware_1.authenticateToken, async (req, res) => {
+    try {
+        const id = req.params.id;
+        const { status } = req.body;
+        const allowedStatuses = [
+            "pending",
+            "in_review",
+            "approved",
+            "changes_requested"
+        ];
+        if (!status || !allowedStatuses.includes(status)) {
+            return res.status(400).json({ message: "Invalid submission status" });
+        }
+        const submission = await (0, submissions_1.updateSubmissionStatus)(id, status);
+        res.json({ message: "Submission status updated successfully", submission });
+    }
+    catch (error) {
+        if (error instanceof Error && error.message === "Submission not found") {
+            return res.status(404).json({ message: error.message });
+        }
+        console.error(error);
+        res.status(500).json({ message: "Server error"
+        });
+    }
+});
+//delete submission
+app.delete("/api/submissions/:id", middleware_1.authenticateToken, async (req, res) => {
+    try {
+        const id = req.params.id;
+        const submission = await (0, submissions_1.deleteSubmission)(id);
+        res.json({ message: "Submission deleted successfully", submission });
+    }
+    catch (error) {
+        if (error instanceof Error && error.message === "Submission not found") {
+            return res.status(404).json({ message: error.message });
+        }
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+}); //create comments
+app.post("/api/submissions/:submissionId/comments", middleware_1.authenticateToken, async (req, res) => {
+    try {
+        if (req.user?.role !== "reviewer") {
+            return res.status(403).json({ message: "Only reviewers can comment" });
+        }
+        const submissionId = req.params.submissionId;
+        const { content, line_number } = req.body;
+        if (!content) {
+            return res.status(400).json({ message: "Comment content is required" });
+        }
+        const comment = await (0, comments_1.createComment)(submissionId, req.user.id, content, line_number ?? null);
+        res.status(201).json({ message: "Comment created successfully", comment });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+//get comments by a submission
+app.get("/api/submissions/:submissionId/comments", middleware_1.authenticateToken, async (req, res) => {
+    try {
+        const submissionId = req.params.submissionId;
+        const comments = await (0, comments_1.getCommentsBySubmission)(submissionId);
+        res.json({ comments });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+}); //update comments
+app.put("/api/comments/:id", middleware_1.authenticateToken, async (req, res) => {
+    try {
+        const id = req.params.id;
+        const { content, line_number } = req.body;
+        if (!content) {
+            return res.status(400).json({ message: "Comment content is required" });
+        }
+        const comment = await (0, comments_1.updateComment)(id, req.user.id, content, line_number ?? null);
+        res.json({ message: "Comment updated successfully", comment });
+    }
+    catch (error) {
+        if (error instanceof Error && error.message === "Comment not found") {
+            return res.status(404).json({ message: error.message });
+        }
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+//delete comments
+app.delete("/api/comments/:id", middleware_1.authenticateToken, async (req, res) => {
+    try {
+        const id = req.params.id;
+        const comment = await (0, comments_1.deleteComment)(id, req.user.id);
+        res.json({ message: "Comment deleted successfully", comment });
+    }
+    catch (error) {
+        if (error instanceof Error && error.message === "Comment not found") {
+            return res.status(404).json({ message: error.message });
+        }
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+}); //approve or requuest changes 
+app.put("/api/submissions/:id/review", middleware_1.authenticateToken, async (req, res) => {
+    try {
+        if (req.user?.role !== "reviewer") {
+            return res.status(403).json({ message: "Only reviewers can review submissions" });
+        }
+        const submissionId = req.params.id;
+        const { status } = req.body;
+        if (status !== "approved" && status !== "changes_requested") {
+            return res.status(400).json({ message: "Status must be approved or changes_requested" });
+        }
+        const review = await (0, reviews_1.reviewSubmission)(submissionId, req.user.id, status);
+        (0, webserver_1.broadcastMessage)({
+            type: "review_update",
+            submission_id: submissionId,
+            reviewer_id: req.user.id,
+            status: status
+        });
+        res.json({ message: "Submission reviewed successfully", review });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+}); //review history
+app.get("/api/submissions/:id/reviews", middleware_1.authenticateToken, async (req, res) => {
+    try {
+        const submissionId = req.params.id;
+        const reviews = await (0, reviews_1.getReviewHistory)(submissionId);
+        res.json({ reviews });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+//notifications
+app.post("/api/activities", middleware_1.authenticateToken, async (req, res) => {
+    try {
+        const { message } = req.body;
+        if (!message) {
+            return res.status(400).json({
+                message: "Activity message is required"
+            });
+        }
+        const activity = await (0, notifications_1.createActivity)(req.user.id, message);
+        res.status(201).json({
+            message: "Activity created successfully",
+            activity
+        });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Server error"
+        });
+    }
+});
+app.get("/api/activities", middleware_1.authenticateToken, async (req, res) => {
+    try {
+        const activities = await (0, notifications_1.getActivityFeed)(req.user.id);
+        res.json({ activities });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+app.get("/api/projects/:projectId/stats", middleware_1.authenticateToken, async (req, res) => {
+    try {
+        const projectId = req.params.projectId;
+        const stats = await (0, stats_1.getProjectStats)(projectId);
+        res.json({ stats });
     }
     catch (error) {
         console.error(error);

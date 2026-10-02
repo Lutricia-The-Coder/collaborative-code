@@ -6,6 +6,9 @@ import {createProject, getProjects, addProjectMember, removeProjectMember} from 
 import { createSubmission,getSubmissionsByProject, getSubmissionById,updateSubmissionStatus, deleteSubmission} from "./submissions";
 import { createComment, getCommentsBySubmission ,updateComment, deleteComment} from "./comments";
 import {reviewSubmission, getReviewHistory} from "./reviews";
+import {createActivity, getActivityFeed} from "./notifications";
+import { getProjectStats } from "./stats";
+import { broadcastMessage } from "./webserver";
 
 const app = express();
 
@@ -416,7 +419,12 @@ app.put(
                 req.user.id,
                 status
             );
-
+broadcastMessage({
+    type: "review_update",
+    submission_id: submissionId,
+    reviewer_id: req.user.id,
+    status: status
+});
             res.json({message: "Submission reviewed successfully",review});
         } catch (error) {
             console.error(error);
@@ -436,6 +444,66 @@ app.get(
             );
 
             res.json({reviews});
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({message: "Server error"});
+        }
+    }
+);
+//notifications
+app.post(
+    "/api/activities",
+    authenticateToken,
+    async (req: AuthRequest, res) => {
+        try {
+            const { message } = req.body;
+
+            if (!message) {
+                return res.status(400).json({
+                    message: "Activity message is required"
+                });
+            }
+
+            const activity = await createActivity(
+                req.user!.id,
+                message
+            );
+
+            res.status(201).json({
+                message: "Activity created successfully",
+                activity
+            });
+        } catch (error) {
+            console.error(error);
+
+            res.status(500).json({
+                message: "Server error"
+            });
+        }
+    }
+);
+
+app.get(
+    "/api/activities",
+    authenticateToken,
+    async (req: AuthRequest, res) => {
+        try {
+            const activities = await getActivityFeed(req.user!.id);
+            res.json({activities});
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({message: "Server error"});
+        }
+    }
+);
+app.get(
+    "/api/projects/:projectId/stats",
+    authenticateToken,
+    async (req: AuthRequest, res) => {
+        try {
+            const projectId = req.params.projectId as string;
+            const stats = await getProjectStats(projectId);
+            res.json({stats});
         } catch (error) {
             console.error(error);
             res.status(500).json({message: "Server error"});
