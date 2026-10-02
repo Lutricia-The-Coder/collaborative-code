@@ -27,7 +27,7 @@ Before running the project, install:
 * Node.js
 * npm
 * PostgreSQL
-* pgAdmin 4 (optional, but useful for managing the database)
+* pgAdmin 4
 * Git
 
 Check Node.js:
@@ -55,7 +55,7 @@ psql --version
 Clone the repository:
 
 ```bash
-git clone <YOUR_REPOSITORY_URL>
+git clone code-collaborative
 ```
 
 Enter the project directory:
