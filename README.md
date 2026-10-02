@@ -347,8 +347,6 @@ with your PostgreSQL password.
 
 Do not commit `.env` to Git.
 
-The project already includes `.env` in `.gitignore`.
-
 ---
 
 # 9. Project Structure
