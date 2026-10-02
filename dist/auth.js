@@ -7,7 +7,6 @@ exports.registerUser = registerUser;
 exports.loginUser = loginUser;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const uuid_1 = require("uuid");
 const db_1 = __importDefault(require("./db"));
 async function registerUser(name, email, password, role = "submitter") {
     const existingUser = await db_1.default.query("SELECT id FROM users WHERE email = $1", [email]);
@@ -15,10 +14,9 @@ async function registerUser(name, email, password, role = "submitter") {
         throw new Error("Email already registered");
     }
     const passwordHash = await bcryptjs_1.default.hash(password, 10);
-    const userId = (0, uuid_1.v4)();
-    const result = await db_1.default.query(`INSERT INTO users (id, name, email, password_hash, role)
-         VALUES ($1, $2, $3, $4, $5)
-         RETURNING id, name, email, role, profile_picture`, [userId, name, email, passwordHash, role]);
+    const result = await db_1.default.query(`INSERT INTO users (name, email, password_hash, role)
+     VALUES ($1, $2, $3, $4, $5)
+    RETURNING id, name, email, role, profile_picture`, [name, email, passwordHash, role]);
     return result.rows[0];
 }
 async function loginUser(email, password) {

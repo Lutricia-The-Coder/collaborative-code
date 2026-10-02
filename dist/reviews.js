@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.reviewSubmission = reviewSubmission;
 exports.getReviewHistory = getReviewHistory;
-const uuid_1 = require("uuid");
 const db_1 = __importDefault(require("./db"));
 async function reviewSubmission(submissionId, reviewerId, status) {
     const submission = await db_1.default.query(`SELECT id
@@ -14,7 +13,6 @@ async function reviewSubmission(submissionId, reviewerId, status) {
     if (submission.rows.length === 0) {
         throw new Error("Submission not found");
     }
-    const reviewId = (0, uuid_1.v4)();
     await db_1.default.query(`UPDATE submissions
          SET status = $1
          WHERE id = $2`, [status, submissionId]);
@@ -22,7 +20,6 @@ async function reviewSubmission(submissionId, reviewerId, status) {
          (id, submission_id, reviewer_id, status)
          VALUES ($1, $2, $3, $4)
          RETURNING id, submission_id, reviewer_id, status, created_at`, [
-        reviewId,
         submissionId,
         reviewerId,
         status

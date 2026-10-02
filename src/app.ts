@@ -9,7 +9,7 @@ import {reviewSubmission, getReviewHistory} from "./reviews";
 import {createActivity, getActivityFeed} from "./notifications";
 import { getProjectStats } from "./stats";
 import { broadcastMessage } from "./webserver";
-
+import { requireFields } from "./validation";
 const app = express();
 
 app.use(express.json());
@@ -18,31 +18,26 @@ app.get("/", (req, res) => {
     res.json({ message: "Collaborative Code Review API"});
 });
 
-app.post("/api/auth/register", async (req, res) => {
-    try {
-        const { name, email, password, role } = req.body;
-
-        if (!name || !email || !password) {
-            return res.status(400).json({message: "Name, email and password are required"});
+app.post(
+    "/api/auth/register",
+    requireFields(["name", "email", "password"]),
+    async (req, res) => {
+        try {
+            const {name,email,password,role} = req.body;
+            const user = await registerUser(name,email,password,role);
+            res.status(201).json({message: "User registered successfully",user});
+        } catch (error) {
+            console.error(error);
+            if (error instanceof Error &&error.message === "Email already registered") {
+            return res.status(400).json({message: error.message});
+            }
+            res.status(500).json({message: "Server error"});
         }
-
-        if (role && role !== "submitter" && role !== "reviewer") {
- return res.status(400).json({message: "Role must be submitter or reviewer"});
-        }
-
- const user = await registerUser(name, email,password,role || "submitter");
-res.status(201).json({message: "User registered successfully",user});
-    } catch (error) {
-        if (error instanceof Error && error.message === "Email already registered") {
- return res.status(409).json({ message: error.message});
-        }
-
-        console.error(error);
-        res.status(500).json({ message: "Server error"});
     }
-});
+);
 //login
-app.post("/api/auth/login", async (req, res) => {
+app.post("/api/auth/login",  requireFields(["email", "password"]),
+    async (req, res) => {
     try {
         const { email, password } = req.body;
 
@@ -127,7 +122,7 @@ return res.status(403).json({message: "You can only delete your own account"});
     }
 });
 //create and list projects
-app.post("/api/projects", authenticateToken, async (req: AuthRequest, res) => {
+app.post("/api/projects", authenticateToken,  requireFields(["name"]),async (req: AuthRequest, res) => {
     try {
         const { name, description } = req.body;
 
@@ -197,7 +192,7 @@ app.delete(
 //create submissions
 app.post(
     "/api/projects/:projectId/submissions",
-    authenticateToken,
+    authenticateToken,requireFields(["title", "code"]),
     async (req: AuthRequest, res) => {
         try {
             const projectId = req.params.projectId as string;
@@ -311,7 +306,7 @@ app.delete(
 );//create comments
 app.post(
     "/api/submissions/:submissionId/comments",
-    authenticateToken,
+    authenticateToken, requireFields(["content"]),
     async (req: AuthRequest, res) => {
         try {
             if (req.user?.role !== "reviewer") {
@@ -451,51 +446,47 @@ app.get(
     }
 );
 //notifications
+
 app.post(
-    "/api/activities",
+    "/api/notifications",
     authenticateToken,
     async (req: AuthRequest, res) => {
         try {
             const { message } = req.body;
 
             if (!message) {
-                return res.status(400).json({
-                    message: "Activity message is required"
-                });
+                return res.status(400).json({message: "Activity message is required"});
             }
 
-            const activity = await createActivity(
+            const notification = await createActivity(
                 req.user!.id,
                 message
             );
 
-            res.status(201).json({
-                message: "Activity created successfully",
-                activity
-            });
-        } catch (error) {
-            console.error(error);
-
-            res.status(500).json({
-                message: "Server error"
-            });
-        }
-    }
-);
-
-app.get(
-    "/api/activities",
-    authenticateToken,
-    async (req: AuthRequest, res) => {
-        try {
-            const activities = await getActivityFeed(req.user!.id);
-            res.json({activities});
+            res.status(201).json({message: "Notification created successfully",notification});
         } catch (error) {
             console.error(error);
             res.status(500).json({message: "Server error"});
         }
     }
 );
+
+app.get(
+    "/api/users/:id/notifications",
+    authenticateToken,
+    async (req: AuthRequest, res) => {
+        try {
+            const userId = req.params.id as string;
+            const notifications = await getActivityFeed(userId);
+
+            res.json({notifications });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({message: "Server error"});
+        }
+    }
+);
+//statistics
 app.get(
     "/api/projects/:projectId/stats",
     authenticateToken,

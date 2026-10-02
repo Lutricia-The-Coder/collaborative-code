@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+
 import pool from "./db";
 
 export async function reviewSubmission(
@@ -17,8 +17,6 @@ export async function reviewSubmission(
         throw new Error("Submission not found");
     }
 
-    const reviewId = uuidv4();
-
     await pool.query(
         `UPDATE submissions
          SET status = $1
@@ -28,11 +26,11 @@ export async function reviewSubmission(
 
     const result = await pool.query(
         `INSERT INTO review_history
-         (id, submission_id, reviewer_id, status)
-         VALUES ($1, $2, $3, $4)
+         ( submission_id, reviewer_id, status)
+         VALUES ($1, $2, $3)
          RETURNING id, submission_id, reviewer_id, status, created_at`,
         [
-            reviewId,
+    
             submissionId,
             reviewerId,
             status

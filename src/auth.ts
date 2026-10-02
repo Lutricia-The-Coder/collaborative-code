@@ -1,6 +1,5 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { v4 as uuidv4 } from "uuid";
 import pool from "./db";
 
 export async function registerUser(
@@ -19,13 +18,12 @@ export async function registerUser(
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const userId = uuidv4();
 
     const result = await pool.query(
-        `INSERT INTO users (id, name, email, password_hash, role)
-         VALUES ($1, $2, $3, $4, $5)
-         RETURNING id, name, email, role, profile_picture`,
-        [userId, name, email, passwordHash, role]
+       `INSERT INTO users (name, email, password_hash, role)
+     VALUES ($1, $2, $3, $4)
+    RETURNING id, name, email, role, profile_picture`,
+     [name, email, passwordHash, role]
     );
 
     return result.rows[0];

@@ -14,33 +14,28 @@ const reviews_1 = require("./reviews");
 const notifications_1 = require("./notifications");
 const stats_1 = require("./stats");
 const webserver_1 = require("./webserver");
+const validation_1 = require("./validation");
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.get("/", (req, res) => {
     res.json({ message: "Collaborative Code Review API" });
 });
-app.post("/api/auth/register", async (req, res) => {
+app.post("/api/auth/register", (0, validation_1.requireFields)(["name", "email", "password"]), async (req, res) => {
     try {
         const { name, email, password, role } = req.body;
-        if (!name || !email || !password) {
-            return res.status(400).json({ message: "Name, email and password are required" });
-        }
-        if (role && role !== "submitter" && role !== "reviewer") {
-            return res.status(400).json({ message: "Role must be submitter or reviewer" });
-        }
-        const user = await (0, auth_1.registerUser)(name, email, password, role || "submitter");
+        const user = await (0, auth_1.registerUser)(name, email, password, role);
         res.status(201).json({ message: "User registered successfully", user });
     }
     catch (error) {
-        if (error instanceof Error && error.message === "Email already registered") {
-            return res.status(409).json({ message: error.message });
-        }
         console.error(error);
+        if (error instanceof Error && error.message === "Email already registered") {
+            return res.status(400).json({ message: error.message });
+        }
         res.status(500).json({ message: "Server error" });
     }
 });
 //login
-app.post("/api/auth/login", async (req, res) => {
+app.post("/api/auth/login", (0, validation_1.requireFields)(["email", "password"]), async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) {
@@ -116,7 +111,7 @@ app.delete("/api/users/:id", middleware_1.authenticateToken, async (req, res) =>
     }
 });
 //create and list projects
-app.post("/api/projects", middleware_1.authenticateToken, async (req, res) => {
+app.post("/api/projects", middleware_1.authenticateToken, (0, validation_1.requireFields)(["name"]), async (req, res) => {
     try {
         const { name, description } = req.body;
         if (!name) {
@@ -173,7 +168,7 @@ app.delete("/api/projects/:id/members/:userId", middleware_1.authenticateToken, 
     }
 });
 //create submissions
-app.post("/api/projects/:projectId/submissions", middleware_1.authenticateToken, async (req, res) => {
+app.post("/api/projects/:projectId/submissions", middleware_1.authenticateToken, (0, validation_1.requireFields)(["title", "code"]), async (req, res) => {
     try {
         const projectId = req.params.projectId;
         const { title, filename, code, language } = req.body;
@@ -256,7 +251,7 @@ app.delete("/api/submissions/:id", middleware_1.authenticateToken, async (req, r
         res.status(500).json({ message: "Server error" });
     }
 }); //create comments
-app.post("/api/submissions/:submissionId/comments", middleware_1.authenticateToken, async (req, res) => {
+app.post("/api/submissions/:submissionId/comments", middleware_1.authenticateToken, (0, validation_1.requireFields)(["content"]), async (req, res) => {
     try {
         if (req.user?.role !== "reviewer") {
             return res.status(403).json({ message: "Only reviewers can comment" });

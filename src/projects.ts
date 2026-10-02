@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+
 import pool from "./db";
 
 export async function createProject(
@@ -6,13 +6,13 @@ export async function createProject(
     description: string,
     ownerId: string
 ) {
-    const projectId = uuidv4();
+
 
     const result = await pool.query(
-        `INSERT INTO projects (id, name, description, owner_id)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO projects ( name, description, owner_id)
+         VALUES ($1, $2, $3)
          RETURNING id, name, description, owner_id`,
-        [projectId, name, description, ownerId]
+        [name, description, ownerId]
     );
 
     return result.rows[0];

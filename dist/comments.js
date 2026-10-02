@@ -7,15 +7,12 @@ exports.createComment = createComment;
 exports.getCommentsBySubmission = getCommentsBySubmission;
 exports.updateComment = updateComment;
 exports.deleteComment = deleteComment;
-const uuid_1 = require("uuid");
 const db_1 = __importDefault(require("./db"));
 async function createComment(submissionId, userId, content, lineNumber) {
-    const commentId = (0, uuid_1.v4)();
     const result = await db_1.default.query(`INSERT INTO comments
          (id, submission_id, user_id, content, line_number)
          VALUES ($1, $2, $3, $4, $5)
          RETURNING id, submission_id, user_id, content, line_number`, [
-        commentId,
         submissionId,
         userId,
         content,
