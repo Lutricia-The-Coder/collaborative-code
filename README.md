@@ -80,7 +80,6 @@ The project uses the following main dependencies:
 express
 pg
 dotenv
-uuid
 bcryptjs
 jsonwebtoken
 ws
