@@ -22,6 +22,10 @@ The platform allows users to create projects, submit code, request and perform r
 ![Notifications](src/assets/notifications.png)
 # Get notifications
 ![get notifications](src/assets/get_notifications.png)
+# Get statistics
+![get stats](src/assets/get%20stats.png)
+# Websocket
+1[web socket](src/assets/websocket.png)
 # Logged in user check
 ![User check](src/assets/user_check.png)
 ![Authentication check](src/assets/authentication_proof.png)
