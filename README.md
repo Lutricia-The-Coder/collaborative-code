@@ -3,6 +3,28 @@
 A REST API-driven collaborative code review platform built with **Node.js, TypeScript, Express.js, PostgreSQL, JWT, and WebSockets**.
 
 The platform allows users to create projects, submit code, request and perform reviews, add inline comments, track review history, receive notifications, and receive real-time review updates.
+---
+
+## Preview
+# Register 
+![register screenshot](src/assets/register.png)
+# Project creation
+![project](src/assets/project_creation.png)
+# Submissions
+![subs](src/assets/submissions.png)
+# Review submissions
+![review](src//assets/review_sub.png)
+# Comments
+![comments](src/assets/comments.png)
+# Get comments
+![get comments](src/assets/get_comments.png)
+# Notifications
+![Notifications](src/assets/notifications.png)
+# Get notifications
+![get notifications](src/assets/get_notifications.png)
+# Logged in user check
+![User check](src/assets/user_check.png)
+![Authentication check](src/assets/authentication_proof.png)
 
 ---
 
